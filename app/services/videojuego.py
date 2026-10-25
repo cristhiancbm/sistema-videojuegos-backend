@@ -35,3 +35,34 @@ def listar_videojuegos_service(db: Session):
     query = text("SELECT * FROM videojuegos")
     resultados = db.execute(query).mappings().all()
     return list(resultados)
+
+def actualizar_videojuego_service(id: int, request, db: Session):
+    # 1. Verificar si el videojuego existe
+    buscar_videojuego = text(
+        "SELECT id, titulo, genero, anio, desarrollador FROM videojuegos WHERE id = :id"
+    )
+    existe_videojuego = db.execute(buscar_videojuego, {"id": id}).mappings().first()
+
+    if not existe_videojuego:
+        return None  # Retornamos None para que el router maneje el 404
+
+    # 2. Filtrar solo los campos que el usuario mandó a actualizar (excluyendo los que están en None)
+    datos_actualizar = request.dict(exclude_unset=True)
+    if not datos_actualizar:
+        return dict(
+            existe_videojuego
+        )  # Si no mandó nada, devolvemos el actual sin cambios
+
+    # 3. Construir la consulta SQL dinámica de actualización
+    partes_sql = [f"{key} = :{key}" for key in datos_actualizar.keys()]
+    sql_unido = ", ".join(partes_sql)
+
+    datos_actualizar["id"] = id
+    query = text(f"UPDATE videojuegos SET {sql_unido} WHERE id = :id")
+
+    db.execute(query, datos_actualizar)
+    db.commit()
+
+    # 4. Retornar el registro ya actualizado
+    updated = db.execute(buscar_videojuego, {"id": id}).mappings().first()
+    return dict(updated)

@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.config import get_db
-from app.schemas.videojuego import JuegoCreateRequest, JuegoResponse
+from app.schemas.videojuego import JuegoCreateRequest, JuegoResponse, JuegoUpdateRequest
 from app.services.videojuego import (
     registrar_videojuego_service,
     listar_videojuegos_service,
+    actualizar_videojuego_service,
 )
 
 router = APIRouter(prefix="/videojuegos", tags=["Videojuegos"])
@@ -39,4 +40,28 @@ def listar_videojuegos(db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Error al obtener los videojuegos: {str(e)}"
+        )
+
+
+@router.patch("/{id}")
+def actualizar_videojuego(
+    id: int, request: JuegoUpdateRequest, db: Session = Depends(get_db)
+):
+    try:
+        videojuego_actualizado = actualizar_videojuego_service(id, request, db)
+
+        if not videojuego_actualizado:
+            raise HTTPException(status_code=404, detail="Videojuego no encontrado")
+
+        return {
+            "mensaje": "Videojuego actualizado exitosamente en la base de datos",
+            "datos_registrados": videojuego_actualizado,
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Error al actualizar el videojuego: {str(e)}"
         )
