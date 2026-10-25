@@ -9,6 +9,7 @@ from app.services.videojuego import (
     listar_videojuegos_service,
     actualizar_videojuego_service,
     eliminar_videojuego_service,
+    obtener_videojuego_por_id_service,
 )
 
 router = APIRouter(prefix="/videojuegos", tags=["Videojuegos"])
@@ -42,6 +43,26 @@ def listar_videojuegos(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=500, detail=f"Error al obtener los videojuegos: {str(e)}"
         )
+
+
+@router.get("/{id}", response_model=JuegoResponse)
+def obtener_videojuego_por_id(id: int, db: Session = Depends(get_db)):
+    try:
+        # Delegamos la búsqueda al servicio
+        videojuego = obtener_videojuego_por_id_service(id, db)
+
+        if not videojuego:
+            raise HTTPException(status_code=404, detail="Videojuego no encontrado")
+
+        return videojuego
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error al obtener el videojuego: {str(e)}"
+        )
+
 
 
 @router.patch("/{id}")

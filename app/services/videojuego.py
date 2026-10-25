@@ -36,6 +36,20 @@ def listar_videojuegos_service(db: Session):
     resultados = db.execute(query).mappings().all()
     return list(resultados)
 
+
+
+
+def obtener_videojuego_por_id_service(id: int, db: Session):
+    consulta = text(
+        "SELECT id, titulo, genero, anio, desarrollador FROM videojuegos WHERE id = :id"
+    )
+    resultado = db.execute(consulta, {"id": id}).mappings().first()
+
+    if not resultado:
+        return None  # Retornamos None si no existe
+
+    return dict(resultado)
+
 def actualizar_videojuego_service(id: int, request, db: Session):
     # 1. Verificar si el videojuego existe
     buscar_videojuego = text(
