@@ -30,3 +30,8 @@ def registrar_videojuego_service(nombre: str, db: Session) -> dict:
     db.commit()  # Guardamos los cambios en la BD MySQL
 
     return nuevo_videojuego
+
+def listar_videojuegos_service(db: Session):
+    query = text("SELECT * FROM videojuegos")
+    resultados = db.execute(query).mappings().all()
+    return list(resultados)
