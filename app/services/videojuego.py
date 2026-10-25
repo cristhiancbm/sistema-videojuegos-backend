@@ -66,3 +66,18 @@ def actualizar_videojuego_service(id: int, request, db: Session):
     # 4. Retornar el registro ya actualizado
     updated = db.execute(buscar_videojuego, {"id": id}).mappings().first()
     return dict(updated)
+
+def eliminar_videojuego_service(id: int, db: Session) -> bool:
+    # 1. Verificar si el videojuego existe
+    consulta_verificar = text("SELECT id FROM videojuegos WHERE id = :id")
+    existente = db.execute(consulta_verificar, {"id": id}).mappings().first()
+
+    if not existente:
+        return False  # Retornamos False si no existe
+
+    # 2. Ejecutar la eliminación
+    consulta_eliminar = text("DELETE FROM videojuegos WHERE id = :id")
+    db.execute(consulta_eliminar, {"id": id})
+    db.commit()
+
+    return True  # Retornamos True indicando que se eliminó con éxito

@@ -8,6 +8,7 @@ from app.services.videojuego import (
     registrar_videojuego_service,
     listar_videojuegos_service,
     actualizar_videojuego_service,
+    eliminar_videojuego_service,
 )
 
 router = APIRouter(prefix="/videojuegos", tags=["Videojuegos"])
@@ -64,4 +65,25 @@ def actualizar_videojuego(
         db.rollback()
         raise HTTPException(
             status_code=500, detail=f"Error al actualizar el videojuego: {str(e)}"
+        )
+
+@router.delete("/{id}")
+def eliminar_videojuego(id: int, db: Session = Depends(get_db)):
+    try:
+        # Delegamos la eliminación al servicio
+        fue_eliminado = eliminar_videojuego_service(id, db)
+
+        if not fue_eliminado:
+            raise HTTPException(status_code=404, detail="Videojuego no encontrado")
+
+        return {
+            "mensaje": f"Videojuego con ID {id} eliminado exitosamente de la base de datos"
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500, detail=f"Error al eliminar el videojuego: {str(e)}"
         )
